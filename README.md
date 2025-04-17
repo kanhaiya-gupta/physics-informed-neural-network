@@ -211,7 +211,7 @@ results/<equation>/
 ## API Usage
 The FastAPI server provides endpoints for training and prediction for each equation type. The API documentation is available at `http://localhost:8000/docs` when the server is running.
 
-![FastAPI Swagger UI](docs/fastapi_swagger.png)
+![FastAPI Swagger UI](docs/fastapi_swagger.jpeg)
 
 The Swagger UI provides an interactive interface to:
 1. View all available endpoints
