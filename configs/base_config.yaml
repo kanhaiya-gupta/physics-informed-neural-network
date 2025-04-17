@@ -1,0 +1,9 @@
+model:
+  layers: [2, 20, 20, 1]
+training:
+  epochs: 1000
+  learning_rate: 0.001
+data:
+  num_points: 1000
+  x_range: [0, 1]
+  t_range: [0, 1]
