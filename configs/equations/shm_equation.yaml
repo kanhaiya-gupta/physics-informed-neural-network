@@ -1,0 +1,27 @@
+# Simple Harmonic Motion equation configuration
+
+# Model parameters
+model:
+  layers: [1, 20, 20, 20, 1]  # Input size: 1 (time), Output size: 1 (displacement)
+  activation: "tanh"
+
+# Training parameters
+training:
+  epochs: 1000
+  learning_rate: 0.001
+  batch_size: 32
+
+# Equation parameters
+equation:
+  omega: 1.0  # Angular frequency
+
+# Domain parameters
+domain:
+  t_min: 0.0
+  t_max: 2*pi
+  num_points: 100
+
+# Initial conditions
+initial_conditions:
+  x0: 1.0     # Initial displacement
+  v0: 0.0     # Initial velocity 
