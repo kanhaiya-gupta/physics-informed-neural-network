@@ -22,7 +22,9 @@ class SHMTrainer(Trainer):
         super().__init__()
         self.model = SHMPINN(layers)
         self.equation = SHMEquation(omega)
+        self.data_generator = SHMDataGenerator()
         self.loss_history = []
+        self.log_progress = None  # Custom logging function
         
         # Create results directory
         self.results_dir = os.path.join("results", "shm")
@@ -39,6 +41,7 @@ class SHMTrainer(Trainer):
             epochs (int): Number of training epochs
             lr (float): Learning rate
         """
+        self.loss_history = []
         optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         
         # Generate training points
@@ -67,25 +70,34 @@ class SHMTrainer(Trainer):
             
             self.loss_history.append(loss.item())
             
-            if epoch % 100 == 0:
-                print(f"Epoch {epoch}, Loss: {loss.item():.6f}")
+            # Log progress
+            if self.log_progress:
+                self.log_progress(epoch, float(loss))
+            else:
+                print(f"Epoch {epoch}, Loss: {float(loss)}")
+            
+            # Save model periodically
+            if (epoch + 1) % 100 == 0:
+                self.save_model()
         
-        # Save results
-        self._save_results()
-        
-    def _save_results(self):
+        # Save final model
+        self.save_model()
+        return float(loss)
+
+    def save_model(self):
         """Save the trained model and generate plots."""
         # Save model
-        torch.save(self.model.state_dict(),
-                  os.path.join(self.results_dir, "models", "model.pth"))
+        model_path = os.path.join(self.results_dir, "models", "model.pth")
+        torch.save(self.model.state_dict(), model_path)
         
         # Save loss history
-        np.save(os.path.join(self.results_dir, "metrics", "loss_history.npy"),
-                np.array(self.loss_history))
+        loss_path = os.path.join(self.results_dir, "metrics", "loss_history.npy")
+        np.save(loss_path, np.array(self.loss_history))
         
         # Generate and save plots
         self._plot_loss_curve()
         self._plot_solution()
+        self._plot_comparison()
         
     def _plot_loss_curve(self):
         """Plot and save the loss curve."""
@@ -110,6 +122,23 @@ class SHMTrainer(Trainer):
         plt.xlabel("Time")
         plt.ylabel("Displacement")
         plt.title("SHM Solution")
+        plt.legend()
+        plt.savefig(os.path.join(self.results_dir, "plots", "solution_comparison.png"))
+        plt.close()
+
+    def _plot_comparison(self):
+        """Plot and save the comparison between predicted and exact solutions."""
+        t = torch.linspace(0, 2*np.pi, 100).view(-1, 1)
+        with torch.no_grad():
+            prediction = self.model(t)
+            exact = self.equation.exact_solution(t)
+        
+        plt.figure(figsize=(10, 6))
+        plt.plot(t.numpy(), prediction.numpy(), label="Predicted")
+        plt.plot(t.numpy(), exact.numpy(), '--', label="Exact")
+        plt.xlabel("Time")
+        plt.ylabel("Displacement")
+        plt.title("SHM Solution Comparison")
         plt.legend()
         plt.savefig(os.path.join(self.results_dir, "plots", "solution_comparison.png"))
         plt.close() 

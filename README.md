@@ -70,6 +70,23 @@ where:
 - **Data Generation**: Flexible data generation for training and validation.
 - **Visualization Tools**: Tools for plotting and analyzing results.
 - **Configuration Management**: YAML-based configuration for easy parameter tuning.
+- **Structured Logging**: Comprehensive logging system for API interactions and training progress.
+
+## Logging System
+The framework includes a robust logging system that tracks:
+- **API Interactions**: Request/response details, status codes, and error tracking
+- **Training Progress**: Training start/end, per-epoch metrics, and model saving events
+- **Error Handling**: Detailed error logging with stack traces
+- **Performance Metrics**: Training time and model performance statistics
+
+Log files are stored in the `logs` directory:
+- `logs/api.log`: API request/response logging
+- `logs/training.log`: Training progress and metrics
+
+Log rotation is configured with:
+- Maximum file size: 10MB
+- Backup files: 5
+- Automatic rotation
 
 ## Project Structure 
 The project structure is as follows:
@@ -96,6 +113,9 @@ physics_informed_neural_network/
 │       ├── heat.py
 │       ├── wave.py
 │       └── burgers.py
+├── logs/
+│   ├── api.log
+│   └── training.log
 ├── src/
 │   ├── models/
 │   │   ├── base_pinn.py

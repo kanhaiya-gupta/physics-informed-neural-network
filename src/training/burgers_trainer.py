@@ -81,32 +81,36 @@ class BurgersTrainer(BaseTrainer):
 
     def train(self, epochs=1000, lr=0.001):
         self.loss_history = []
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+        
         for epoch in range(epochs):
-            self.optimizer.zero_grad()
-            x, t = self.data_generator.generate_collocation_points()
-            u = self.model.predict(x, t)
-            
-            # Calculate gradients
-            u_x = torch.autograd.grad(u.sum(), x, create_graph=True)[0]
-            u_xx = torch.autograd.grad(u_x.sum(), x, create_graph=True)[0]
-            u_t = torch.autograd.grad(u.sum(), t, create_graph=True)[0]
-            
-            pde_loss = self.equation.pde_residual(x, t, u, u_x, u_xx, u_t).pow(2).mean()
-            # Placeholder: Add initial and boundary condition losses
-            loss = pde_loss
+            optimizer.zero_grad()
+            loss = self.model.compute_loss()
             loss.backward()
-            self.optimizer.step()
+            optimizer.step()
             self.loss_history.append(loss.item())
             
-            if epoch % 100 == 0:
-                print(f"Epoch {epoch}, Loss: {loss.item()}")
+            # Log progress
+            if self.log_progress:
+                self.log_progress(epoch, float(loss))
+            else:
+                print(f"Epoch {epoch}, Loss: {float(loss)}")
+            
+            # Save model periodically
+            if (epoch + 1) % 100 == 0:
+                self.save_model()
         
-        # Save results after training
-        self._save_results()
+        # Save final model
+        self.save_model()
+        return float(loss)
 
-    def _save_results(self):
+    def save_model(self):
+        # Ensure directory exists
+        save_dir = os.path.join("results", "burgers", "models")
+        os.makedirs(save_dir, exist_ok=True)
+        
         # Save model
-        model_path = os.path.join(self.models_dir, "model.pth")
+        model_path = os.path.join(save_dir, "model.pth")
         torch.save(self.model.state_dict(), model_path)
         
         # Save loss history

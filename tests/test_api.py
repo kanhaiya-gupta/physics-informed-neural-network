@@ -4,6 +4,7 @@ matplotlib.use('Agg')  # Use non-interactive backend
 from fastapi.testclient import TestClient
 from main import app
 import json
+import os
 
 client = TestClient(app)
 
@@ -15,7 +16,13 @@ def test_heat_train_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert "message" in data
+    assert "final_loss" in data
+    assert "training_time" in data
+    assert "epochs" in data
     assert data["message"] == "Training completed successfully"
+    assert isinstance(data["final_loss"], float)
+    assert isinstance(data["training_time"], float)
+    assert data["epochs"] == 1
 
 def test_heat_predict_endpoint():
     # First train the model
@@ -112,11 +119,17 @@ def test_invalid_input():
     assert response.status_code == 422  # Validation error
 
 def test_missing_model():
+    # Delete model file if it exists
+    model_path = "results/heat/models/model.pth"
+    if os.path.exists(model_path):
+        os.remove(model_path)
+        
     # Test prediction without training
     response = client.post(
         "/heat/predict",
         json={"x": [0.1, 0.2, 0.3], "t": [0.1, 0.2, 0.3]}
     )
-    assert response.status_code == 200  # Current behavior
+    assert response.status_code == 404
     data = response.json()
-    assert "prediction" in data  # Model returns predictions even without training
+    assert "detail" in data
+    assert "not found" in data["detail"].lower()
