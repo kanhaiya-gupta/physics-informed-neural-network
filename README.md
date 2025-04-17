@@ -2,6 +2,16 @@
 
 This project implements a modular framework for solving partial differential equations (PDEs) using Physics-Informed Neural Networks (PINNs). It supports multiple equations (e.g., simple harmonic motion, heat, wave, Burgers' equations) and includes a FastAPI server for exposing PINN functionality via RESTful APIs. The framework is designed for extensibility, with separate modules for models, equations, data generation, training, evaluation, and hyperparameter tuning.
 
+## Framework Overview
+
+The framework consists of several key components:
+1. **Models**: Neural network architectures for different equations
+2. **Equations**: Mathematical formulations of physical laws
+3. **Data Generation**: Tools for creating training and validation data
+4. **Training**: Algorithms for optimizing the neural networks
+5. **API**: RESTful interface for model training and prediction
+6. **Results**: Storage and visualization of model outputs
+
 ## Mathematical Background
 
 ### Simple Harmonic Motion
@@ -200,6 +210,14 @@ results/<equation>/
 
 ## API Usage
 The FastAPI server provides endpoints for training and prediction for each equation type. The API documentation is available at `http://localhost:8000/docs` when the server is running.
+
+![FastAPI Swagger UI](docs/fastapi_swagger.png)
+
+The Swagger UI provides an interactive interface to:
+1. View all available endpoints
+2. Test the API directly from the browser
+3. See request/response schemas
+4. View example requests
 
 ### Training Endpoints
 - `POST /shm/train`
