@@ -5,6 +5,7 @@ from src.models.heat_pinn import HeatPINN
 from app.schemas.heat import HeatPredictRequest, HeatPredictResponse
 import torch
 import os
+from fastapi import HTTPException
 
 router = APIRouter()
 
@@ -13,10 +14,14 @@ class TrainRequest(BaseModel):
     learning_rate: float = 0.001
 
 @router.post("/train")
-async def train_heat_model(request: TrainRequest):
-    trainer = HeatTrainer()
-    trainer.train(epochs=request.epochs, lr=request.learning_rate)
-    return {"status": "Training completed", "epochs": request.epochs}
+async def train_heat(request: TrainRequest):
+    """Train the Heat PINN model."""
+    try:
+        trainer = HeatTrainer()
+        final_loss = trainer.train(epochs=request.epochs, lr=request.learning_rate)
+        return {"message": "Training completed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/predict", response_model=HeatPredictResponse)
 async def predict_heat(request: HeatPredictRequest):

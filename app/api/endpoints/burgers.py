@@ -5,6 +5,7 @@ from src.models.burgers_pinn import BurgersPINN
 from app.schemas.burgers import BurgersPredictRequest, BurgersPredictResponse
 import torch
 import os
+from fastapi import HTTPException
 
 router = APIRouter()
 
@@ -14,10 +15,14 @@ class TrainRequest(BaseModel):
     nu: float = 0.01  # Viscosity coefficient
 
 @router.post("/train")
-async def train_burgers_model(request: TrainRequest):
-    trainer = BurgersTrainer(nu=request.nu)
-    trainer.train(epochs=request.epochs, lr=request.learning_rate)
-    return {"status": "Training completed", "epochs": request.epochs}
+async def train_burgers(request: TrainRequest):
+    """Train the Burgers PINN model."""
+    try:
+        trainer = BurgersTrainer(nu=request.nu)
+        final_loss = trainer.train(epochs=request.epochs, lr=request.learning_rate)
+        return {"message": "Training completed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/predict", response_model=BurgersPredictResponse)
 async def predict_burgers(request: BurgersPredictRequest):

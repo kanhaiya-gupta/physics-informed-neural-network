@@ -24,7 +24,7 @@ async def train_shm(request: SHMTrainRequest):
     try:
         from src.training.shm_trainer import SHMTrainer
         trainer = SHMTrainer(omega=request.omega)
-        trainer.train(epochs=request.epochs, lr=request.learning_rate)
+        final_loss = trainer.train(epochs=request.epochs, lr=request.learning_rate)
         return {"message": "Training completed successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
