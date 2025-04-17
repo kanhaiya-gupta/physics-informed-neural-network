@@ -1,8 +1,18 @@
 # Physics-Informed Neural Network (PINN) Project
 
-This project implements a modular framework for solving partial differential equations (PDEs) using Physics-Informed Neural Networks (PINNs). It supports multiple PDEs (e.g., heat, wave, Burgers' equations) and includes a FastAPI server for exposing PINN functionality via RESTful APIs. The framework is designed for extensibility, with separate modules for models, equations, data generation, training, evaluation, and hyperparameter tuning.
+This project implements a modular framework for solving partial differential equations (PDEs) using Physics-Informed Neural Networks (PINNs). It supports multiple equations (e.g., simple harmonic motion, heat, wave, Burgers' equations) and includes a FastAPI server for exposing PINN functionality via RESTful APIs. The framework is designed for extensibility, with separate modules for models, equations, data generation, training, evaluation, and hyperparameter tuning.
 
 ## Mathematical Background
+
+### Simple Harmonic Motion
+The simple harmonic motion equation describes the motion of a mass on a spring:
+```
+d²x/dt² + ω²x = 0
+```
+where:
+- x(t) is the displacement at time t
+- ω is the angular frequency
+- d²x/dt² is the second time derivative
 
 ### Heat Equation
 The heat equation describes the distribution of heat in a given region over time:
@@ -39,10 +49,10 @@ where:
 - ν ∂²u/∂x² is the diffusion term
 
 ## Features
-- **Modular PINN Implementation**: Supports multiple PDEs with reusable base classes.
+- **Modular PINN Implementation**: Supports multiple equations with reusable base classes.
 - **FastAPI Integration**: RESTful API for training and predicting with PINN models.
 - **Hyperparameter Tuning**: Scripts for optimizing model parameters using Optuna.
-- **Extensible Structure**: Easily add new PDEs by extending existing modules.
+- **Extensible Structure**: Easily add new equations by extending existing modules.
 - **Comprehensive Testing**: Unit tests for all major components.
 - **Data Generation**: Flexible data generation for training and validation.
 - **Visualization Tools**: Tools for plotting and analyzing results.
@@ -58,6 +68,7 @@ physics_informed_neural_network/
 │   │   ├── __init__.py
 │   │   ├── endpoints/
 │   │   │   ├── __init__.py
+│   │   │   ├── shm.py
 │   │   │   ├── heat.py
 │   │   │   ├── wave.py
 │   │   │   └── burgers.py
@@ -68,27 +79,32 @@ physics_informed_neural_network/
 │   │   └── dependencies.py
 │   └── schemas/
 │       ├── __init__.py
+│       ├── shm.py
 │       ├── heat.py
 │       ├── wave.py
 │       └── burgers.py
 ├── src/
 │   ├── models/
 │   │   ├── base_pinn.py
+│   │   ├── shm_pinn.py
 │   │   ├── heat_pinn.py
 │   │   ├── wave_pinn.py
 │   │   └── burgers_pinn.py
 │   ├── equations/
 │   │   ├── base_equation.py
+│   │   ├── shm_equation.py
 │   │   ├── heat_equation.py
 │   │   ├── wave_equation.py
 │   │   └── burgers_equation.py
 │   ├── data/
 │   │   ├── generators/
 │   │   │   ├── data_generator.py
+│   │   │   ├── shm_data.py
 │   │   │   ├── heat_data.py
 │   │   │   ├── wave_data.py
 │   │   │   └── burgers_data.py
 │   │   ├── initial_conditions/
+│   │   │   ├── ic_shm.py
 │   │   │   ├── ic_heat.py
 │   │   │   ├── ic_wave.py
 │   │   │   └── ic_burgers.py
@@ -98,6 +114,7 @@ physics_informed_neural_network/
 │   │       └── bc_burgers.py
 │   ├── training/
 │   │   ├── trainer.py
+│   │   ├── shm_trainer.py
 │   │   ├── heat_trainer.py
 │   │   ├── wave_trainer.py
 │   │   └── burgers_trainer.py
@@ -105,6 +122,15 @@ physics_informed_neural_network/
 │       ├── __init__.py
 │       └── config_parser.py
 ├── results/
+│   ├── shm/
+│   │   ├── models/
+│   │   │   └── model.pth
+│   │   ├── plots/
+│   │   │   ├── loss_curve.png
+│   │   │   ├── solution_comparison.png
+│   │   │   └── solution_slice.png
+│   │   └── metrics/
+│   │       └── loss_history.npy
 │   ├── heat/
 │   │   ├── models/
 │   │   │   └── model.pth
@@ -134,11 +160,13 @@ physics_informed_neural_network/
 │           └── loss_history.npy
 ├── configs/
 │   └── equations/
+│       ├── shm_equation.yaml
 │       ├── heat_equation.yaml
 │       ├── wave_equation.yaml
 │       └── burgers_equation.yaml
 ├── scripts/
 │   ├── hyperparameter_tuning/
+│   │   ├── tune_shm.py
 │   │   ├── tune_heat.py
 │   │   ├── tune_wave.py
 │   │   └── tune_burgers.py
@@ -157,7 +185,7 @@ physics_informed_neural_network/
 ```
 
 ## Results Directory Structure
-The results directory (`results/`) contains subdirectories for each equation type (heat, wave, burgers). Each equation directory has the following structure:
+The results directory (`results/`) contains subdirectories for each equation type (shm, heat, wave, burgers). Each equation directory has the following structure:
 ```
 results/<equation>/
 ├── models/
@@ -174,6 +202,7 @@ results/<equation>/
 The FastAPI server provides endpoints for training and prediction for each equation type. The API documentation is available at `http://localhost:8000/docs` when the server is running.
 
 ### Training Endpoints
+- `POST /shm/train`
 - `POST /heat/train`
 - `POST /wave/train`
 - `POST /burgers/train`
@@ -187,6 +216,7 @@ Each training endpoint accepts a JSON body with:
 ```
 
 ### Prediction Endpoints
+- `POST /shm/predict`
 - `POST /heat/predict`
 - `POST /wave/predict`
 - `POST /burgers/predict`
@@ -194,7 +224,7 @@ Each training endpoint accepts a JSON body with:
 Each prediction endpoint accepts a JSON body with:
 ```json
 {
-    "x": [0.1, 0.2, 0.3],  // Spatial coordinates
+    "x": [0.1, 0.2, 0.3],  // Spatial coordinates (not used for SHM)
     "t": [0.1, 0.2, 0.3]   // Temporal coordinates
 }
 ```
