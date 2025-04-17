@@ -270,6 +270,34 @@ Each prediction endpoint accepts a JSON body with:
 }
 ```
 
+## Results Showcase
+
+### Simple Harmonic Motion
+![SHM Results](results/shm/plots/solution_comparison.png)
+*Comparison of PINN prediction (blue) vs exact solution (red) for Simple Harmonic Motion*
+
+### Heat Equation
+![Heat Equation Results](results/heat/plots/solution_comparison.png)
+*Temperature distribution predicted by the PINN (left) vs exact solution (right)*
+
+### Wave Equation
+![Wave Equation Results](results/wave/plots/solution_comparison.png)
+*Wave propagation predicted by the PINN (left) vs exact solution (right)*
+
+### Burgers' Equation
+![Burgers' Equation Results](results/burgers/plots/solution_comparison.png)
+*Velocity field predicted by the PINN (left) vs exact solution (right)*
+
+### Training Progress
+Example loss curves showing the convergence of the PINN training:
+![Loss Curves](results/heat/plots/loss_curve.png)
+*Training loss over epochs for the Heat Equation*
+
+### Solution Slices
+Temporal evolution of solutions at specific points:
+![Solution Slices](results/burgers/plots/solution_slice.png)
+*Solution evolution over time for Burgers' Equation*
+
 ## Getting Started
 1. Clone the repository
 2. Create and activate the virtual environment:
@@ -289,6 +317,49 @@ Each prediction endpoint accepts a JSON body with:
    python main.py
    ```
 5. Access the API documentation at `http://localhost:8000/docs`
+
+## Local Testing of GitHub Actions
+You can test the GitHub Actions workflows locally using `act`. This helps catch issues before pushing to the repository.
+
+### Windows Setup
+1. Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
+2. Run the setup script as Administrator:
+   ```powershell
+   # Open PowerShell as Administrator and run:
+   .\scripts\setup_windows_env.ps1
+   ```
+   This will:
+   - Install Scoop package manager
+   - Install act
+   - Verify Docker installation
+
+3. Start Docker Desktop and wait for it to be running
+
+### Running Local Tests
+```powershell
+# Open PowerShell as Administrator and run:
+.\scripts\test_workflows.ps1
+```
+
+The script will:
+1. Verify all prerequisites are met
+2. Run the CI workflow tests
+3. Run the CD workflow tests in dry-run mode
+
+Note: The CD workflow requires Heroku credentials. For local testing, it runs in dry-run mode by default.
+
+### Troubleshooting
+If you encounter issues:
+1. Make sure Docker Desktop is running
+2. Run PowerShell as Administrator
+3. Check if all prerequisites are installed:
+   ```powershell
+   # Check Docker
+   docker --version
+   
+   # Check act
+   act --version
+   ```
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
