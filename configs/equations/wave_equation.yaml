@@ -1,0 +1,5 @@
+equation:
+  c: 1.0     # Wave speed
+  x_range: [0, 1]  # Spatial domain
+  t_range: [0, 1]  # Temporal domain
+  ic_type: "sin"   # Initial condition type (sinusoidal)
