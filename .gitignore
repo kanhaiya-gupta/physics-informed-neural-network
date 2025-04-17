@@ -12,3 +12,4 @@ build/
 *.log
 results/
 *.DS_Store
+setup_project.sh
