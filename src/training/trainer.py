@@ -1,4 +1,7 @@
 import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import os
 from abc import ABC, abstractmethod
 
 class BaseTrainer(ABC):
@@ -21,6 +24,7 @@ class BaseTrainer(ABC):
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
+        self.loss_history = []
 
     @abstractmethod
     def compute_loss(self, x, t, u_true=None):
@@ -77,3 +81,43 @@ class BaseTrainer(ABC):
             u_pred = self.model.predict(x, t)
             loss = self.compute_loss(x, t, u_true) if u_true is not None else None
         return u_pred, loss
+
+class Trainer:
+    """
+    Base trainer class for Physics-Informed Neural Networks.
+    This class provides common functionality for all equation trainers.
+    """
+    
+    def __init__(self):
+        """Initialize the base trainer."""
+        self.model = None
+        self.equation = None
+        self.loss_history = []
+        
+    def train(self, epochs=1000, lr=0.001):
+        """
+        Base training method to be overridden by specific equation trainers.
+        
+        Args:
+            epochs (int): Number of training epochs
+            lr (float): Learning rate
+        """
+        raise NotImplementedError("Train method must be implemented by child classes")
+        
+    def _save_results(self):
+        """Save the trained model and generate plots."""
+        raise NotImplementedError("Save results method must be implemented by child classes")
+        
+    def _plot_loss_curve(self):
+        """Plot and save the loss curve."""
+        plt.figure(figsize=(10, 6))
+        plt.plot(self.loss_history)
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.title("Training Loss")
+        plt.savefig(os.path.join(self.results_dir, "plots", "loss_curve.png"))
+        plt.close()
+        
+    def _plot_solution(self):
+        """Plot and save the predicted and exact solutions."""
+        raise NotImplementedError("Plot solution method must be implemented by child classes")

@@ -1,8 +1,8 @@
 from fastapi import FastAPI
-from app.api.router import api_router
+from app.api.router import router
 
-app = FastAPI(title="PINN API", description="API for Physics-Informed Neural Networks")
-app.include_router(api_router)
+app = FastAPI(title="Physics-Informed Neural Network API")
+app.include_router(router)
 
 if __name__ == "__main__":
     import uvicorn
