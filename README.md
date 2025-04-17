@@ -2,7 +2,41 @@
 
 This project implements a modular framework for solving partial differential equations (PDEs) using Physics-Informed Neural Networks (PINNs). It supports multiple PDEs (e.g., heat, wave, Burgers' equations) and includes a FastAPI server for exposing PINN functionality via RESTful APIs. The framework is designed for extensibility, with separate modules for models, equations, data generation, training, evaluation, and hyperparameter tuning.
 
----
+## Mathematical Background
+
+### Heat Equation
+The heat equation describes the distribution of heat in a given region over time:
+```
+∂u/∂t = α ∂²u/∂x²
+```
+where:
+- u(x,t) is the temperature at position x and time t
+- α is the thermal diffusivity
+- ∂u/∂t is the time derivative
+- ∂²u/∂x² is the second spatial derivative
+
+### Wave Equation
+The wave equation describes the propagation of waves:
+```
+∂²u/∂t² = c² ∂²u/∂x²
+```
+where:
+- u(x,t) is the wave amplitude at position x and time t
+- c is the wave speed
+- ∂²u/∂t² is the second time derivative
+- ∂²u/∂x² is the second spatial derivative
+
+### Burgers' Equation
+Burgers' equation describes the evolution of a viscous fluid:
+```
+∂u/∂t + u ∂u/∂x = ν ∂²u/∂x²
+```
+where:
+- u(x,t) is the fluid velocity at position x and time t
+- ν is the viscosity coefficient
+- ∂u/∂t is the time derivative
+- u ∂u/∂x is the nonlinear advection term
+- ν ∂²u/∂x² is the diffusion term
 
 ## Features
 - **Modular PINN Implementation**: Supports multiple PDEs with reusable base classes.
@@ -10,6 +44,9 @@ This project implements a modular framework for solving partial differential equ
 - **Hyperparameter Tuning**: Scripts for optimizing model parameters using Optuna.
 - **Extensible Structure**: Easily add new PDEs by extending existing modules.
 - **Comprehensive Testing**: Unit tests for all major components.
+- **Data Generation**: Flexible data generation for training and validation.
+- **Visualization Tools**: Tools for plotting and analyzing results.
+- **Configuration Management**: YAML-based configuration for easy parameter tuning.
 
 ## Project Structure 
 The project structure is as follows (for reference):
@@ -106,172 +143,156 @@ physics_informed_neural_network/
 │       ├── metrics/
 │       └── tuning/
 ├── tests/
-│   ├── test_data_generation.py
-│   ├── test_models.py
-│   ├── test_equations.py
-│   ├── test_training.py
-│   ├── test_evaluation.py
-│   ├── test_api.py
-│   ├── test_scripts.py
-│   └── test_utils.py
-├── main.py
+│   ├── test_models/
+│   ├── test_equations/
+│   ├── test_data/
+│   ├── test_training/
+│   └── test_evaluation/
 ├── requirements.txt
-├── README.md
-└── .gitignore
+└── README.md
 ```
 
----
+## Installation
 
-### Top-Level Files
-- `main.py`: Entry point for the FastAPI server.
-- `requirements.txt`: Lists project dependencies.
-- `README.md`: Project documentation (this file).
-- `.gitignore`: Ignores unnecessary files (e.g., `__pycache__`, `results/`).
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/physics-informed-neural-network.git
+cd physics-informed-neural-network
+```
 
-### `app/` Directory
-FastAPI application logic for exposing PINN functionality via APIs.
-- `app/__init__.py`: Marks `app` as a Python package.
-- `app/api/router.py`: Aggregates API endpoints for all PDEs.
-- `app/api/endpoints/heat.py`: API endpoints for the heat equation (training, prediction).
-- `app/api/endpoints/wave.py`: API endpoints for the wave equation.
-- `app/api/endpoints/burgers.py`: API endpoints for the Burgers' equation.
-- `app/core/config.py`: Configures FastAPI settings (e.g., CORS).
-- `app/core/dependencies.py`: Manages dependency injection for models and trainers.
-- `app/schemas/heat.py`: Pydantic schemas for heat equation API requests/responses.
-- `app/schemas/wave.py`: Pydantic schemas for wave equation API requests/responses.
-- `app/schemas/burgers.py`: Pydantic schemas for Burgers' equation API requests/responses.
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-### `src/` Directory
-Core PINN implementation, including models, equations, data generation, training, and utilities.
-- `src/models/base_pinn.py`: Base class for PINN neural networks.
-- `src/models/heat_pinn.py`: PINN model for the heat equation.
-- `src/models/wave_pinn.py`: PINN model for the wave equation.
-- `src/models/burgers_pinn.py`: PINN model for the Burgers' equation.
-- `src/equations/base_equation.py`: Abstract base class for PDEs.
-- `src/equations/heat_equation.py`: Heat equation PDE implementation.
-- `src/equations/wave_equation.py`: Wave equation PDE implementation.
-- `src/equations/burgers_equation.py`: Burgers' equation PDE implementation.
-- `src/data/generators/data_generator.py`: Base class for data generation.
-- `src/data/generators/heat_data.py`: Data generator for the heat equation.
-- `src/data/generators/wave_data.py`: Data generator for the wave equation.
-- `src/data/generators/burgers_data.py`: Data generator for the Burgers' equation.
-- `src/data/initial_conditions/ic_heat.py`: Initial conditions for the heat equation.
-- `src/data/initial_conditions/ic_wave.py`: Initial conditions for the wave equation.
-- `src/data/initial_conditions/ic_burgers.py`: Initial conditions for the Burgers' equation.
-- `src/data/boundary_conditions/bc_heat.py`: Boundary conditions for the heat equation.
-- `src/data/boundary_conditions/bc_wave.py`: Boundary conditions for the wave equation.
-- `src/data/boundary_conditions/bc_burgers.py`: Boundary conditions for the Burgers' equation.
-- `src/training/trainer.py`: Base class for training PINN models.
-- `src/training/heat_trainer.py`: Training logic for the heat equation.
-- `src/training/wave_trainer.py`: Training logic for the wave equation.
-- `src/training/burgers_trainer.py`: Training logic for the Burgers' equation.
-- `src/evaluation/evaluator.py`: Base class for evaluating PINN models.
-- `src/evaluation/heat_evaluator.py`: Evaluation logic for the heat equation.
-- `src/evaluation/wave_evaluator.py`: Evaluation logic for the wave equation.
-- `src/evaluation/burgers_evaluator.py`: Evaluation logic for the Burgers' equation.
-- `src/utils/logger.py`: Logging utilities.
-- `src/utils/visualization.py`: Plotting and visualization functions.
-- `src/utils/metrics.py`: Loss and evaluation metrics.
-- `src/utils/config_parser.py`: YAML configuration parser.
-
-### `configs/` Directory
-Configuration files for PINN hyperparameters and PDE parameters.
-- `configs/base_config.yaml`: Base configuration for PINN models and training.
-- `configs/equations/heat_equation.yaml`: Heat equation-specific parameters.
-- `configs/equations/wave_equation.yaml`: Wave equation-specific parameters.
-- `configs/equations/burgers_equation.yaml`: Burgers' equation-specific parameters.
-
-### `scripts/` Directory
-Scripts for hyperparameter tuning, data preprocessing, and experiments.
-- `scripts/hyperparameter_tuning/tune_heat.py`: Hyperparameter tuning for the heat equation.
-- `scripts/hyperparameter_tuning/tune_wave.py`: Hyperparameter tuning for the wave equation.
-- `scripts/hyperparameter_tuning/tune_burgers.py`: Hyperparameter tuning for the Burgers' equation.
-- `scripts/hyperparameter_tuning/tuning_utils.py`: Shared utilities for tuning.
-- `scripts/preprocess_data.py`: Data preprocessing script.
-- `scripts/run_batch_experiments.py`: Runs multiple experiments.
-- `scripts/analyze_results.py`: Analyzes experiment results.
-
-### `results/` Directory
-Stores model checkpoints, plots, metrics, and tuning results.
-- `results/heat/`: Results for the heat equation.
-  - `models/`: Saved model checkpoints.
-  - `plots/`: Visualization outputs.
-  - `metrics/`: Evaluation metrics.
-  - `tuning/`: Hyperparameter tuning results.
-- `results/wave/`: Results for the wave equation (same structure).
-- `results/burgers/`: Results for the Burgers' equation (same structure).
-
-### `tests/` Directory
-Unit tests for all components.
-- `test_data_generation.py`: Tests for data generators.
-- `test_models.py`: Tests for PINN models.
-- `test_equations.py`: Tests for PDE implementations.
-- `test_training.py`: Tests for training logic.
-- `test_evaluation.py`: Tests for evaluation logic.
-- `test_api.py`: Tests for FastAPI endpoints.
-- `test_scripts.py`: Tests for scripts (e.g., hyperparameter tuning).
-- `test_utils.py`: Tests for utility functions.
-
-## Setup
-1. Clone the repository or create the structure using the provided `setup_project.sh` script.
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set up a virtual environment (optional):
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
 ## Usage
 
-### Running the FastAPI Server
-Start the FastAPI server to expose PINN functionality:
+### Starting the FastAPI Server
 ```bash
-python main.py
-```
-Access the API at `http://localhost:8000`. Use the interactive API docs at `http://localhost:8000/docs`.
-
-### Training a PINN Model
-Train a model via the API:
-```bash
-curl -X POST "http://localhost:8000/heat/train" -H "Content-Type: application/json" -d '{"epochs": 1000, "learning_rate": 0.001}'
-```
-Or use a script for offline training:
-```bash
-python scripts/run_batch_experiments.py
+uvicorn app.main:app --reload
 ```
 
-### Predicting with a Trained Model
-Make predictions via the API:
-```bash
-curl -X POST "http://localhost:8000/heat/predict" -H "Content-Type: application/json" -d '{"x": [0.0, 0.5, 1.0], "t": [0.0, 0.1, 0.2]}'
+### Training a Model
+```python
+from src.training.heat_trainer import HeatTrainer
+
+trainer = HeatTrainer()
+trainer.train(epochs=1000, lr=0.001)
 ```
 
-### Hyperparameter Tuning
-Run hyperparameter tuning for a specific equation:
+### Making Predictions
+```python
+from src.models.heat_pinn import HeatPINN
+
+model = HeatPINN()
+prediction = model.predict(x, t)
+```
+
+### Running Hyperparameter Tuning
 ```bash
 python scripts/hyperparameter_tuning/tune_heat.py
 ```
-Results are saved in `results/heat/tuning/`.
 
-### Running Tests
-Execute unit tests:
+### Analyzing Results
 ```bash
-pytest tests/
+python scripts/analyze_results.py
 ```
 
-## Adding a New PDE
-To add a new PDE (e.g., advection equation):
-1. Create equation-specific files:
-   - `src/models/advection_pinn.py`
-   - `src/equations/advection_equation.py`
-   - `src/data/generators/advection_data.py`
-   - `src/data/initial_conditions/ic_advection.py`
-   - `src/data/boundary_conditions/bc_advection.py`
-   - `src/training/advection_trainer.py`
-   - `src/evaluation/advection_evaluator.py`
-   - `app/api/endpoints/advection.py`
-   - `app/schemas/advection.py`
-   - `configs/equations/advection_equ
+## API Documentation
+
+### Heat Equation
+- **POST /heat/train**: Train a heat equation PINN model
+  - Parameters: epochs, learning_rate
+  - Returns: Training status and epochs
+
+- **POST /heat/predict**: Make predictions with a trained heat equation PINN model
+  - Parameters: x (spatial coordinates), t (time coordinates)
+  - Returns: Predicted solution values
+
+### Wave Equation
+- **POST /wave/train**: Train a wave equation PINN model
+  - Parameters: epochs, learning_rate, c (wave speed)
+  - Returns: Training status and epochs
+
+- **POST /wave/predict**: Make predictions with a trained wave equation PINN model
+  - Parameters: x (spatial coordinates), t (time coordinates)
+  - Returns: Predicted solution values
+
+### Burgers' Equation
+- **POST /burgers/train**: Train a Burgers' equation PINN model
+  - Parameters: epochs, learning_rate, nu (viscosity coefficient)
+  - Returns: Training status and epochs
+
+- **POST /burgers/predict**: Make predictions with a trained Burgers' equation PINN model
+  - Parameters: x (spatial coordinates), t (time coordinates)
+  - Returns: Predicted solution values
+
+## Examples
+
+### Heat Equation Example
+```python
+from src.training.heat_trainer import HeatTrainer
+from src.models.heat_pinn import HeatPINN
+
+# Train the model
+trainer = HeatTrainer()
+trainer.train(epochs=1000, lr=0.001)
+
+# Make predictions
+model = HeatPINN()
+x = torch.linspace(0, 1, 100)
+t = torch.linspace(0, 1, 100)
+prediction = model.predict(x, t)
+```
+
+### Wave Equation Example
+```python
+from src.training.wave_trainer import WaveTrainer
+from src.models.wave_pinn import WavePINN
+
+# Train the model
+trainer = WaveTrainer(c=1.0)
+trainer.train(epochs=1000, lr=0.001)
+
+# Make predictions
+model = WavePINN()
+x = torch.linspace(0, 1, 100)
+t = torch.linspace(0, 1, 100)
+prediction = model.predict(x, t)
+```
+
+### Burgers' Equation Example
+```python
+from src.training.burgers_trainer import BurgersTrainer
+from src.models.burgers_pinn import BurgersPINN
+
+# Train the model
+trainer = BurgersTrainer(nu=0.01)
+trainer.train(epochs=1000, lr=0.001)
+
+# Make predictions
+model = BurgersPINN()
+x = torch.linspace(-1, 1, 100)
+t = torch.linspace(0, 1, 100)
+prediction = model.predict(x, t)
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a new branch: `git checkout -b feature/your-feature-name`
+3. Make your changes
+4. Run tests: `pytest`
+5. Commit your changes: `git commit -m 'Add some feature'`
+6. Push to the branch: `git push origin feature/your-feature-name`
+7. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
