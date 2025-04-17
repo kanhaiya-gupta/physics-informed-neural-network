@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pydantic
+torch
+numpy
+matplotlib
+pyyaml
+pytest
+optuna
