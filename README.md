@@ -1,10 +1,17 @@
 # Physics-Informed Neural Network (PINN) Project
 
-A modular PINN project with FastAPI support for solving differential equations (e.g., heat, wave, Burgers' equations).
+This project implements a modular framework for solving partial differential equations (PDEs) using Physics-Informed Neural Networks (PINNs). It supports multiple PDEs (e.g., heat, wave, Burgers' equations) and includes a FastAPI server for exposing PINN functionality via RESTful APIs. The framework is designed for extensibility, with separate modules for models, equations, data generation, training, evaluation, and hyperparameter tuning.
 
 ---
 
-### Project Structure 
+## Features
+- **Modular PINN Implementation**: Supports multiple PDEs with reusable base classes.
+- **FastAPI Integration**: RESTful API for training and predicting with PINN models.
+- **Hyperparameter Tuning**: Scripts for optimizing model parameters using Optuna.
+- **Extensible Structure**: Easily add new PDEs by extending existing modules.
+- **Comprehensive Testing**: Unit tests for all major components.
+
+## Project Structure 
 The project structure is as follows (for reference):
 ```
 physics_informed_neural_network/
@@ -114,49 +121,6 @@ physics_informed_neural_network/
 ```
 
 ---
-
-### File Contents
-
-#### Top-Level Files
-
-```python
-from fastapi import FastAPI
-from app.api.router import api_router
-
-app = FastAPI(title="PINN API", description="API for Physics-Informed Neural Networks")
-app.include_router(api_router)
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-```
-
-```
-plain
-fastapi
-uvicorn
-pydantic
-torch
-numpy
-matplotlib
-pyyaml
-pytest
-optuna
-```
-
-<xaiArtifact artifact_id="ea90b771-6caf-4407-a5df-d5fc797688ae" artifact_version_id="802e8703-7ddd-4bce-ae6a-40903fa94266" title="README.md" contentType="text/markdown">
-# Physics-Informed Neural Network (PINN) Project
-
-This project implements a modular framework for solving partial differential equations (PDEs) using Physics-Informed Neural Networks (PINNs). It supports multiple PDEs (e.g., heat, wave, Burgers' equations) and includes a FastAPI server for exposing PINN functionality via RESTful APIs. The framework is designed for extensibility, with separate modules for models, equations, data generation, training, evaluation, and hyperparameter tuning.
-
-## Features
-- **Modular PINN Implementation**: Supports multiple PDEs with reusable base classes.
-- **FastAPI Integration**: RESTful API for training and predicting with PINN models.
-- **Hyperparameter Tuning**: Scripts for optimizing model parameters using Optuna.
-- **Extensible Structure**: Easily add new PDEs by extending existing modules.
-- **Comprehensive Testing**: Unit tests for all major components.
-
-## Project Structure
 
 ### Top-Level Files
 - `main.py`: Entry point for the FastAPI server.
