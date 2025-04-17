@@ -1,0 +1,3 @@
+"""
+FastAPI application for PINNs.
+"""

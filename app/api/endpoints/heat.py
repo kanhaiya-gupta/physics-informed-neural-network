@@ -3,6 +3,8 @@ from pydantic import BaseModel
 from src.training.heat_trainer import HeatTrainer
 from src.models.heat_pinn import HeatPINN
 from app.schemas.heat import HeatPredictRequest, HeatPredictResponse
+import torch
+import os
 
 router = APIRouter()
 
@@ -19,6 +21,24 @@ async def train_heat_model(request: TrainRequest):
 @router.post("/predict", response_model=HeatPredictResponse)
 async def predict_heat(request: HeatPredictRequest):
     model = HeatPINN()
-    # Placeholder: Load trained model and predict
-    prediction = model.predict(request.x, request.t)
-    return HeatPredictResponse(prediction=prediction.tolist())
+    # Load trained model if it exists
+    model_path = os.path.join("results", "heat", "models", "model.pth")
+    if os.path.exists(model_path):
+        model.load_state_dict(torch.load(model_path))
+        model.eval()
+    else:
+        return {"error": "Model not trained yet. Please train the model first."}
+    
+    # Convert inputs to tensors with correct shape
+    x = torch.tensor(request.x, dtype=torch.float32).view(-1, 1)
+    t = torch.tensor(request.t, dtype=torch.float32).view(-1, 1)
+    
+    # Get predictions
+    with torch.no_grad():
+        prediction = model.predict(x, t)
+    
+    # Convert prediction to list of floats
+    prediction_list = prediction.squeeze().tolist()
+    if not isinstance(prediction_list, list):
+        prediction_list = [prediction_list]
+    return HeatPredictResponse(prediction=prediction_list)

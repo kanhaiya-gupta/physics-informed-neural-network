@@ -49,7 +49,7 @@ where:
 - **Configuration Management**: YAML-based configuration for easy parameter tuning.
 
 ## Project Structure 
-The project structure is as follows (for reference):
+The project structure is as follows:
 ```
 physics_informed_neural_network/
 ├── app/
@@ -101,198 +101,126 @@ physics_informed_neural_network/
 │   │   ├── heat_trainer.py
 │   │   ├── wave_trainer.py
 │   │   └── burgers_trainer.py
-│   ├── evaluation/
-│   │   ├── evaluator.py
-│   │   ├── heat_evaluator.py
-│   │   ├── wave_evaluator.py
-│   │   └── burgers_evaluator.py
 │   └── utils/
-│       ├── logger.py
-│       ├── visualization.py
-│       ├── metrics.py
+│       ├── __init__.py
 │       └── config_parser.py
+├── results/
+│   ├── heat/
+│   │   ├── models/
+│   │   │   └── model.pth
+│   │   ├── plots/
+│   │   │   ├── loss_curve.png
+│   │   │   ├── solution_comparison.png
+│   │   │   └── solution_slice.png
+│   │   └── metrics/
+│   │       └── loss_history.npy
+│   ├── wave/
+│   │   ├── models/
+│   │   │   └── model.pth
+│   │   ├── plots/
+│   │   │   ├── loss_curve.png
+│   │   │   ├── solution_comparison.png
+│   │   │   └── solution_slice.png
+│   │   └── metrics/
+│   │       └── loss_history.npy
+│   └── burgers/
+│       ├── models/
+│       │   └── model.pth
+│       ├── plots/
+│       │   ├── loss_curve.png
+│       │   ├── solution_comparison.png
+│       │   └── solution_slice.png
+│       └── metrics/
+│           └── loss_history.npy
 ├── configs/
-│   ├── base_config.yaml
-│   ├── equations/
-│   │   ├── heat_equation.yaml
-│   │   ├── wave_equation.yaml
-│   │   └── burgers_equation.yaml
+│   └── equations/
+│       ├── heat_equation.yaml
+│       ├── wave_equation.yaml
+│       └── burgers_equation.yaml
 ├── scripts/
 │   ├── hyperparameter_tuning/
 │   │   ├── tune_heat.py
 │   │   ├── tune_wave.py
-│   │   ├── tune_burgers.py
-│   │   └── tuning_utils.py
-│   ├── preprocess_data.py
-│   ├── run_batch_experiments.py
+│   │   └── tune_burgers.py
 │   └── analyze_results.py
-├── results/
-│   ├── heat/
-│   │   ├── models/
-│   │   ├── plots/
-│   │   ├── metrics/
-│   │   └── tuning/
-│   ├── wave/
-│   │   ├── models/
-│   │   ├── plots/
-│   │   ├── metrics/
-│   │   └── tuning/
-│   └── burgers/
-│       ├── models/
-│       ├── plots/
-│       ├── metrics/
-│       └── tuning/
 ├── tests/
-│   ├── test_models/
-│   ├── test_equations/
-│   ├── test_data/
-│   ├── test_training/
-│   └── test_evaluation/
+│   ├── __init__.py
+│   ├── test_models.py
+│   ├── test_equations.py
+│   ├── test_data.py
+│   └── test_training.py
 ├── requirements.txt
+├── setup_project.sh
+├── activate_ml_env.sh
+├── activate_ml_env.ps1
 └── README.md
 ```
 
-## Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/physics-informed-neural-network.git
-cd physics-informed-neural-network
+## Results Directory Structure
+The results directory (`results/`) contains subdirectories for each equation type (heat, wave, burgers). Each equation directory has the following structure:
+```
+results/<equation>/
+├── models/
+│   └── model.pth           # Trained model weights
+├── plots/
+│   ├── loss_curve.png      # Training loss curve
+│   ├── solution_comparison.png  # Comparison of predicted and exact solutions
+│   └── solution_slice.png  # Solution slice at a fixed time
+└── metrics/
+    └── loss_history.npy    # Training loss history
 ```
 
-2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+## API Usage
+The FastAPI server provides endpoints for training and prediction for each equation type. The API documentation is available at `http://localhost:8000/docs` when the server is running.
+
+### Training Endpoints
+- `POST /heat/train`
+- `POST /wave/train`
+- `POST /burgers/train`
+
+Each training endpoint accepts a JSON body with:
+```json
+{
+    "epochs": 1000,
+    "learning_rate": 0.001
+}
 ```
 
+### Prediction Endpoints
+- `POST /heat/predict`
+- `POST /wave/predict`
+- `POST /burgers/predict`
+
+Each prediction endpoint accepts a JSON body with:
+```json
+{
+    "x": [0.1, 0.2, 0.3],  // Spatial coordinates
+    "t": [0.1, 0.2, 0.3]   // Temporal coordinates
+}
+```
+
+## Getting Started
+1. Clone the repository
+2. Create and activate the virtual environment:
+   ```bash
+   # On Windows
+   .\activate_ml_env.ps1
+   
+   # On Linux/Mac
+   source activate_ml_env.sh
+   ```
 3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-## Usage
-
-### Starting the FastAPI Server
-```bash
-uvicorn app.main:app --reload
-```
-
-### Training a Model
-```python
-from src.training.heat_trainer import HeatTrainer
-
-trainer = HeatTrainer()
-trainer.train(epochs=1000, lr=0.001)
-```
-
-### Making Predictions
-```python
-from src.models.heat_pinn import HeatPINN
-
-model = HeatPINN()
-prediction = model.predict(x, t)
-```
-
-### Running Hyperparameter Tuning
-```bash
-python scripts/hyperparameter_tuning/tune_heat.py
-```
-
-### Analyzing Results
-```bash
-python scripts/analyze_results.py
-```
-
-## API Documentation
-
-### Heat Equation
-- **POST /heat/train**: Train a heat equation PINN model
-  - Parameters: epochs, learning_rate
-  - Returns: Training status and epochs
-
-- **POST /heat/predict**: Make predictions with a trained heat equation PINN model
-  - Parameters: x (spatial coordinates), t (time coordinates)
-  - Returns: Predicted solution values
-
-### Wave Equation
-- **POST /wave/train**: Train a wave equation PINN model
-  - Parameters: epochs, learning_rate, c (wave speed)
-  - Returns: Training status and epochs
-
-- **POST /wave/predict**: Make predictions with a trained wave equation PINN model
-  - Parameters: x (spatial coordinates), t (time coordinates)
-  - Returns: Predicted solution values
-
-### Burgers' Equation
-- **POST /burgers/train**: Train a Burgers' equation PINN model
-  - Parameters: epochs, learning_rate, nu (viscosity coefficient)
-  - Returns: Training status and epochs
-
-- **POST /burgers/predict**: Make predictions with a trained Burgers' equation PINN model
-  - Parameters: x (spatial coordinates), t (time coordinates)
-  - Returns: Predicted solution values
-
-## Examples
-
-### Heat Equation Example
-```python
-from src.training.heat_trainer import HeatTrainer
-from src.models.heat_pinn import HeatPINN
-
-# Train the model
-trainer = HeatTrainer()
-trainer.train(epochs=1000, lr=0.001)
-
-# Make predictions
-model = HeatPINN()
-x = torch.linspace(0, 1, 100)
-t = torch.linspace(0, 1, 100)
-prediction = model.predict(x, t)
-```
-
-### Wave Equation Example
-```python
-from src.training.wave_trainer import WaveTrainer
-from src.models.wave_pinn import WavePINN
-
-# Train the model
-trainer = WaveTrainer(c=1.0)
-trainer.train(epochs=1000, lr=0.001)
-
-# Make predictions
-model = WavePINN()
-x = torch.linspace(0, 1, 100)
-t = torch.linspace(0, 1, 100)
-prediction = model.predict(x, t)
-```
-
-### Burgers' Equation Example
-```python
-from src.training.burgers_trainer import BurgersTrainer
-from src.models.burgers_pinn import BurgersPINN
-
-# Train the model
-trainer = BurgersTrainer(nu=0.01)
-trainer.train(epochs=1000, lr=0.001)
-
-# Make predictions
-model = BurgersPINN()
-x = torch.linspace(-1, 1, 100)
-t = torch.linspace(0, 1, 100)
-prediction = model.predict(x, t)
-```
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Run the FastAPI server:
+   ```bash
+   python main.py
+   ```
+5. Access the API documentation at `http://localhost:8000/docs`
 
 ## Contributing
-
-1. Fork the repository
-2. Create a new branch: `git checkout -b feature/your-feature-name`
-3. Make your changes
-4. Run tests: `pytest`
-5. Commit your changes: `git commit -m 'Add some feature'`
-6. Push to the branch: `git push origin feature/your-feature-name`
-7. Submit a pull request
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
-
 This project is licensed under the MIT License - see the LICENSE file for details.
