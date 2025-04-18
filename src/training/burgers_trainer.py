@@ -8,112 +8,80 @@ from src.equations.burgers_equation import BurgersEquation
 from src.data.generators.burgers_data import BurgersDataGenerator
 from src.data.initial_conditions.ic_burgers import burgers_initial_condition
 from src.data.boundary_conditions.bc_burgers import burgers_boundary_condition
+import time
 
 class BurgersTrainer(BaseTrainer):
     """
     Trainer for Burgers' equation PINN
     """
-    def __init__(self, nu=0.01, lr=0.001):
-        """
-        Initialize Burgers' equation trainer
-        Args:
-            nu: viscosity coefficient
-            lr: learning rate
-        """
-        model = BurgersPINN(nu=nu)
-        equation = BurgersEquation(nu=nu)
-        data_generator = BurgersDataGenerator()
-        super().__init__(model, equation, data_generator, lr=lr)
-
-        # Set device
+    def __init__(self):
+        """Initialize the Burgers equation trainer."""
+        self.model = BurgersPINN()
+        self.equation = BurgersEquation()
+        self.data_generator = BurgersDataGenerator()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(self.device)
-
+        self.optimizer = None  # Will be initialized in train method
+        self.loss_history = []
+        self.log_progress = None  # Custom logging function
+        
         # Create necessary directories
+        self.data_dir = "data/burgers"
         self.results_dir = "results/burgers"
         self.models_dir = os.path.join(self.results_dir, "models")
         self.plots_dir = os.path.join(self.results_dir, "plots")
         self.metrics_dir = os.path.join(self.results_dir, "metrics")
         
-        for dir_path in [self.results_dir, self.models_dir, self.plots_dir, self.metrics_dir]:
+        for dir_path in [self.data_dir, self.results_dir, self.models_dir, self.plots_dir, self.metrics_dir]:
             os.makedirs(dir_path, exist_ok=True)
 
-    def compute_loss(self, x, t, u_true=None):
-        """
-        Compute total loss including PDE loss and boundary/initial conditions
-        Args:
-            x: spatial coordinate
-            t: temporal coordinate
-            u_true: true solution (if available)
-        Returns:
-            loss: total loss
-        """
-        # Enable gradient computation
-        x.requires_grad_(True)
-        t.requires_grad_(True)
+    def train(self, epochs=1000, lr=0.001, batch_size=32):
+        """Train the model."""
+        start_time = time.time()
         
-        # Get prediction
-        u = self.model.predict(x, t)
+        # Initialize optimizer with the provided learning rate
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
         
-        # Compute derivatives
-        u_x = torch.autograd.grad(u, x, grad_outputs=torch.ones_like(u),
-                                create_graph=True)[0]
-        u_xx = torch.autograd.grad(u_x, x, grad_outputs=torch.ones_like(u_x),
-                                 create_graph=True)[0]
-        u_t = torch.autograd.grad(u, t, grad_outputs=torch.ones_like(u),
-                                create_graph=True)[0]
+        # Generate training data and ensure it requires gradients
+        x = torch.linspace(0, 1, batch_size, requires_grad=True).reshape(-1, 1).to(self.device)
+        t = torch.linspace(0, 1, batch_size, requires_grad=True).reshape(-1, 1).to(self.device)
         
-        # Compute PDE loss
-        pde_loss = self.equation.pde_residual(x, t, u, u_x, u_xx, u_t)
-        pde_loss = torch.mean(pde_loss**2)
-        
-        # Compute initial condition loss
-        ic_loss = burgers_initial_condition(x, t, u)
-        
-        # Compute boundary condition loss
-        bc_loss = burgers_boundary_condition(x, t, u)
-        
-        # Combine losses
-        loss = pde_loss + ic_loss + bc_loss
-        
-        # Add supervised loss if true solution is provided
-        if u_true is not None:
-            supervised_loss = torch.mean((u - u_true)**2)
-            loss += supervised_loss
-            
-        return loss
-
-    def train(self, epochs=1000, lr=0.001):
-        self.loss_history = []
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+        # Save generated data
+        torch.save(x, os.path.join(self.data_dir, "x.pt"))
+        torch.save(t, os.path.join(self.data_dir, "t.pt"))
         
         for epoch in range(epochs):
-            optimizer.zero_grad()
+            self.optimizer.zero_grad()
             
-            # Generate collocation points
-            x, t = self.data_generator.generate_collocation_points()
-            x = x.to(self.device)
-            t = t.to(self.device)
+            # Forward pass
+            points = torch.cat([x, t], dim=1)
+            u_pred = self.model(points)
             
-            # Compute loss
-            loss = self.compute_loss(x, t)
+            # Calculate losses
+            pde_loss = self.equation.compute_pde_loss(points, u_pred)
+            bc_loss = self.equation.compute_bc_loss(points, u_pred)
+            ic_loss = self.equation.compute_ic_loss(points, u_pred)
+            
+            # Total loss
+            loss = pde_loss + bc_loss + ic_loss
+            
+            # Backward pass and optimization
             loss.backward()
-            optimizer.step()
-            self.loss_history.append(loss.item())
+            self.optimizer.step()
             
             # Log progress
-            if self.log_progress:
-                self.log_progress(epoch, float(loss))
-            else:
-                print(f"Epoch {epoch}, Loss: {float(loss)}")
-            
-            # Save model periodically
-            if (epoch + 1) % 100 == 0:
-                self.save_model()
+            if epoch % 100 == 0:
+                print(f"Epoch {epoch}: Loss = {loss.item():.6f}")
+                self.loss_history.append(loss.item())
         
-        # Save final model
+        # Save the trained model and data
         self.save_model()
-        return float(loss)
+        
+        training_time = time.time() - start_time
+        final_loss = float(loss.item())
+        training_time = float(training_time)
+        
+        return final_loss, training_time
 
     def save_model(self):
         # Ensure directory exists
@@ -127,6 +95,14 @@ class BurgersTrainer(BaseTrainer):
         # Save loss history
         loss_path = os.path.join(self.metrics_dir, "loss_history.npy")
         np.save(loss_path, np.array(self.loss_history))
+        
+        # Save training data
+        data_path = os.path.join(self.data_dir, "training_data.pt")
+        torch.save({
+            'x': torch.load(os.path.join(self.data_dir, "x.pt")),
+            't': torch.load(os.path.join(self.data_dir, "t.pt")),
+            'loss_history': self.loss_history
+        }, data_path)
         
         # Generate and save plots
         self._plot_loss_curve()

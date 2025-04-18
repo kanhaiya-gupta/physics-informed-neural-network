@@ -22,12 +22,13 @@ class HeatTrainer:
         self.log_progress = None  # Custom logging function
         
         # Create necessary directories
+        self.data_dir = "data/heat"
         self.results_dir = "results/heat"
         self.models_dir = os.path.join(self.results_dir, "models")
         self.plots_dir = os.path.join(self.results_dir, "plots")
         self.metrics_dir = os.path.join(self.results_dir, "metrics")
         
-        for dir_path in [self.results_dir, self.models_dir, self.plots_dir, self.metrics_dir]:
+        for dir_path in [self.data_dir, self.results_dir, self.models_dir, self.plots_dir, self.metrics_dir]:
             os.makedirs(dir_path, exist_ok=True)
 
     def train(self, epochs=1000, lr=0.001, batch_size=32):
@@ -40,6 +41,10 @@ class HeatTrainer:
         # Generate training data and ensure it requires gradients
         x = torch.linspace(0, 1, batch_size, requires_grad=True).reshape(-1, 1).to(self.device)
         t = torch.linspace(0, 1, batch_size, requires_grad=True).reshape(-1, 1).to(self.device)
+        
+        # Save generated data
+        torch.save(x, os.path.join(self.data_dir, "x.pt"))
+        torch.save(t, os.path.join(self.data_dir, "t.pt"))
         
         for epoch in range(epochs):
             self.optimizer.zero_grad()
@@ -65,7 +70,7 @@ class HeatTrainer:
                 print(f"Epoch {epoch}: Loss = {loss.item():.6f}")
                 self.loss_history.append(loss.item())
         
-        # Save the trained model
+        # Save the trained model and data
         self.save_model()
         
         training_time = time.time() - start_time
@@ -86,6 +91,14 @@ class HeatTrainer:
         # Save loss history
         loss_path = os.path.join(self.metrics_dir, "loss_history.npy")
         np.save(loss_path, np.array(self.loss_history))
+        
+        # Save training data
+        data_path = os.path.join(self.data_dir, "training_data.pt")
+        torch.save({
+            'x': torch.load(os.path.join(self.data_dir, "x.pt")),
+            't': torch.load(os.path.join(self.data_dir, "t.pt")),
+            'loss_history': self.loss_history
+        }, data_path)
         
         # Generate and save plots
         self._plot_loss_curve()

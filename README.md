@@ -5,6 +5,52 @@ A Physics-Informed Neural Network (PINN) framework for solving partial different
 
 This project implements a modular framework for solving partial differential equations (PDEs) using Physics-Informed Neural Networks (PINNs). It supports multiple equations (e.g., simple harmonic motion, heat, wave, Burgers' equations) and includes a FastAPI server for exposing PINN functionality via RESTful APIs. The framework is designed for extensibility, with separate modules for models, equations, data generation, training, evaluation, and hyperparameter tuning.
 
+## Project Structure
+
+```
+physics-informed-neural-network/
+├── data/                    # Generated data storage
+│   ├── shm/                # SHM equation data
+│   ├── heat/               # Heat equation data
+│   ├── wave/               # Wave equation data
+│   └── burgers/            # Burgers' equation data
+├── results/                 # Training results
+│   ├── shm/                # SHM results
+│   │   ├── models/         # Trained models
+│   │   ├── plots/          # Generated plots
+│   │   └── metrics/        # Training metrics
+│   ├── heat/               # Heat equation results
+│   ├── wave/               # Wave equation results
+│   └── burgers/            # Burgers' equation results
+├── src/                    # Source code
+│   ├── equations/          # PDE implementations
+│   ├── models/             # Neural network models
+│   ├── training/           # Training implementations
+│   ├── data/               # Data generation
+│   └── api/                # API endpoints
+└── app/                    # FastAPI application
+```
+
+## Data Organization
+
+Each equation has its own data directory structure:
+
+```
+data/{equation}/
+├── x.pt                    # Spatial coordinates
+├── t.pt                    # Temporal coordinates
+└── training_data.pt        # Complete training data
+```
+
+Results are stored in:
+
+```
+results/{equation}/
+├── models/                 # Trained model weights
+├── plots/                  # Generated plots
+└── metrics/                # Training metrics
+```
+
 ## Framework Overview
 
 The framework consists of several key components:
@@ -73,20 +119,65 @@ where:
 - **Structured Logging**: Comprehensive logging system for API interactions and training progress.
 
 ## Logging System
-The framework includes a robust logging system that tracks:
-- **API Interactions**: Request/response details, status codes, and error tracking
-- **Training Progress**: Training start/end, per-epoch metrics, and model saving events
-- **Error Handling**: Detailed error logging with stack traces
-- **Performance Metrics**: Training time and model performance statistics
 
-Log files are stored in the `logs` directory:
-- `logs/api.log`: API request/response logging
-- `logs/training.log`: Training progress and metrics
+The framework includes a comprehensive logging system that tracks various aspects of the application:
 
-Log rotation is configured with:
+### Log Directory Structure
+```
+logs/
+├── api/                    # API-related logs
+│   ├── access.log         # API access logs
+│   ├── error.log          # API error logs
+│   └── batch.log          # Batch operation logs
+├── training/              # Training-related logs
+│   ├── shm/              # SHM training logs
+│   │   ├── training.log  # Training progress
+│   │   └── metrics.log   # Training metrics
+│   ├── heat/             # Heat equation logs
+│   ├── wave/             # Wave equation logs
+│   └── burgers/          # Burgers' equation logs
+└── system/               # System-level logs
+    ├── startup.log       # Application startup logs
+    └── error.log         # System error logs
+```
+
+### Log Types and Contents
+
+1. **API Logs**
+   - Access logs: Request/response details, status codes
+   - Error logs: API errors, validation failures
+   - Batch logs: Batch training and prediction operations
+
+2. **Training Logs**
+   - Training progress: Epoch information, loss values
+   - Metrics: Performance metrics, convergence data
+   - Equation-specific logs for each implemented equation
+
+3. **System Logs**
+   - Startup logs: Application initialization
+   - Error logs: System-level errors and exceptions
+
+### Log Configuration
+
+Logs are configured with:
 - Maximum file size: 10MB
 - Backup files: 5
 - Automatic rotation
+- Timestamp format: `%Y-%m-%d %H:%M:%S`
+- Log level: INFO for normal operations, ERROR for errors
+
+### Example Log Entries
+
+```log
+# API Access Log
+2025-04-18 09:17:02,082 - INFO - Request to /batch/train - Data: {'equations': ['shm', 'heat'], 'config': {'epochs': 100, 'learning_rate': 0.001, 'batch_size': 32}}
+
+# Training Log
+2025-04-18 09:17:02,082 - INFO - Starting training with config: {'epochs': 100, 'learning_rate': 0.001, 'batch_size': 32}
+
+# Error Log
+2025-04-18 09:17:02,086 - ERROR - Error in /batch/train/shm - Status: 500 - Error: SHMTrainer.train() got an unexpected keyword argument 'learning_rate'
+```
 
 ## Project Structure 
 The project structure is as follows:
@@ -238,51 +329,61 @@ The same structure is maintained for other equations (heat, wave, SHM) under the
 
 ## API Usage
 
-### Burgers' Equation
+### Batch Training and Prediction
 
-#### Train a Model
-```bash
-curl -X POST "http://localhost:8000/api/v1/burgers/train" \
-     -H "Content-Type: application/json" \
-     -d '{"epochs": 1000, "learning_rate": 0.001, "nu": 0.01}'
-```
+The framework supports batch training and prediction for multiple equations:
 
-Response:
-```json
-{
-    "message": "Training completed successfully",
-    "final_loss": 0.000002,
-    "training_time": 120.5,
-    "epochs": 1000,
-    "config_used": {
-        "equation": {
-            "nu": 0.01,
-            "x_min": -1.0,
-            "x_max": 1.0,
-            "t_min": 0.0,
-            "t_max": 1.0
-        },
-        "training": {
-            "epochs": 1000,
+```python
+import requests
+
+# Train multiple equations
+response = requests.post(
+    "http://localhost:8000/batch/train",
+    json={
+        "equations": ["shm", "heat"],
+        "config": {
+            "epochs": 100,
             "learning_rate": 0.001,
             "batch_size": 32
         }
     }
-}
+)
+
+# Get predictions
+response = requests.post(
+    "http://localhost:8000/batch/predict",
+    json={
+        "equations": ["shm", "heat"],
+        "points": {
+            "shm": [0.0, 0.1, 0.2, 0.3],
+            "heat": [0.0, 0.1, 0.2, 0.3]
+        }
+    }
+)
 ```
 
-#### Make Predictions
-```bash
-curl -X POST "http://localhost:8000/api/v1/burgers/predict" \
-     -H "Content-Type: application/json" \
-     -d '{"x": [-1.0, 0.0, 1.0], "t": [0.0, 0.1, 0.2]}'
-```
+### Individual Equation Training
 
-Response:
-```json
-{
-    "prediction": [0.0, 0.25, 0.5]
-}
+You can also train and predict for individual equations:
+
+```python
+# Train a specific equation
+response = requests.post(
+    "http://localhost:8000/equations/shm/train",
+    json={
+        "epochs": 100,
+        "learning_rate": 0.001,
+        "batch_size": 32
+    }
+)
+
+# Get predictions for a specific equation
+response = requests.post(
+    "http://localhost:8000/equations/shm/predict",
+    json={
+        "points": [0.0, 0.1, 0.2, 0.3]
+    }
+)
 ```
 
 ## Results Showcase
