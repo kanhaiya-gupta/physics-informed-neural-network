@@ -74,22 +74,24 @@ class SHMEquation(BaseEquation):
         Returns:
             torch.Tensor: PDE loss
         """
-        # Ensure t requires gradients
+        # Ensure tensors require gradients
         t = t.clone().detach().requires_grad_(True)
+        u = u.clone().detach().requires_grad_(True)
         
-        # Compute derivatives with allow_unused=True
-        u_t = torch.autograd.grad(u.sum(), t, create_graph=True, allow_unused=True)[0]
+        # Compute derivatives
+        u_t = torch.autograd.grad(u, t, grad_outputs=torch.ones_like(u),
+                                create_graph=True, allow_unused=True)[0]
         if u_t is None:
-            u_t = torch.zeros_like(t)
+            u_t = torch.zeros_like(u)
             
-        u_tt = torch.autograd.grad(u_t.sum(), t, create_graph=True, allow_unused=True)[0]
+        u_tt = torch.autograd.grad(u_t, t, grad_outputs=torch.ones_like(u_t),
+                                 create_graph=True, allow_unused=True)[0]
         if u_tt is None:
-            u_tt = torch.zeros_like(t)
-        
-        # PDE residual: d^2x/dt^2 + ω^2x = 0
-        pde_residual = u_tt + (self.omega ** 2) * u
-        
-        return torch.mean(pde_residual ** 2)
+            u_tt = torch.zeros_like(u)
+            
+        # Compute residual
+        residual = u_tt + self.omega**2 * u
+        return residual.pow(2).mean()
     
     def compute_ic_loss(self, t, u):
         """

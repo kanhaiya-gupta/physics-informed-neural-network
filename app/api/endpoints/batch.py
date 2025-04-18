@@ -60,9 +60,9 @@ async def batch_train(request: BatchTrainRequest):
             
             # Train the model
             final_loss, training_time = trainer.train(
-                epochs=request.config.get("epochs", 1000),
-                lr=request.config.get("learning_rate", 0.001),
-                batch_size=request.config.get("batch_size", 32)
+                epochs=request.config.epochs,
+                lr=request.config.learning_rate,
+                batch_size=request.config.batch_size
             )
             
             log_training_complete(equation, final_loss, training_time)

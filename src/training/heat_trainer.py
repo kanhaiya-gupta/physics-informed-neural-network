@@ -10,13 +10,13 @@ from src.data.boundary_conditions.bc_heat import heat_boundary_condition
 import time
 
 class HeatTrainer:
-    def __init__(self):
+    def __init__(self, alpha=0.1):
         """Initialize the Heat equation trainer."""
-        self.model = HeatPINN()
-        self.equation = HeatEquation()
-        self.data_generator = HeatDataGenerator()
+        self.alpha = alpha
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.model.to(self.device)
+        self.model = HeatPINN().to(self.device)
+        self.equation = HeatEquation(alpha=alpha)
+        self.data_generator = HeatDataGenerator()
         self.optimizer = None  # Will be initialized in train method
         self.loss_history = []
         self.log_progress = None  # Custom logging function
