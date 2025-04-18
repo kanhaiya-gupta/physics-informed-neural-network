@@ -7,28 +7,106 @@ This project implements a modular framework for solving partial differential equ
 
 ## Project Structure
 
+The project follows a modular architecture with the following structure:
+
 ```
-physics-informed-neural-network/
-├── data/                    # Generated data storage
-│   ├── shm/                # SHM equation data
-│   ├── heat/               # Heat equation data
-│   ├── wave/               # Wave equation data
-│   └── burgers/            # Burgers' equation data
-├── results/                 # Training results
-│   ├── shm/                # SHM results
-│   │   ├── models/         # Trained models
-│   │   ├── plots/          # Generated plots
-│   │   └── metrics/        # Training metrics
-│   ├── heat/               # Heat equation results
-│   ├── wave/               # Wave equation results
-│   └── burgers/            # Burgers' equation results
-├── src/                    # Source code
-│   ├── equations/          # PDE implementations
-│   ├── models/             # Neural network models
-│   ├── training/           # Training implementations
-│   ├── data/               # Data generation
-│   └── api/                # API endpoints
-└── app/                    # FastAPI application
+physics_informed_neural_network/
+├── app/                    # FastAPI application
+│   ├── __init__.py
+│   ├── api/               # API endpoints
+│   │   ├── __init__.py
+│   │   ├── endpoints/     # Equation-specific endpoints
+│   │   │   ├── __init__.py
+│   │   │   ├── shm.py
+│   │   │   ├── heat.py
+│   │   │   ├── wave.py
+│   │   │   └── burgers.py
+│   │   └── router.py
+│   ├── core/              # Core application logic
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   └── dependencies.py
+│   └── schemas/           # API request/response schemas
+│       ├── __init__.py
+│       ├── shm.py
+│       ├── heat.py
+│       ├── wave.py
+│       └── burgers.py
+├── src/                   # Source code
+│   ├── models/           # Neural network models
+│   │   ├── base_pinn.py
+│   │   ├── shm_pinn.py
+│   │   ├── heat_pinn.py
+│   │   ├── wave_pinn.py
+│   │   └── burgers_pinn.py
+│   ├── equations/        # PDE implementations
+│   │   ├── base_equation.py
+│   │   ├── shm_equation.py
+│   │   ├── heat_equation.py
+│   │   ├── wave_equation.py
+│   │   └── burgers_equation.py
+│   ├── data/            # Data generation
+│   │   ├── generators/  # Data generators
+│   │   │   ├── data_generator.py
+│   │   │   ├── shm_data.py
+│   │   │   ├── heat_data.py
+│   │   │   ├── wave_data.py
+│   │   │   └── burgers_data.py
+│   │   ├── initial_conditions/  # Initial conditions
+│   │   │   ├── ic_shm.py
+│   │   │   ├── ic_heat.py
+│   │   │   ├── ic_wave.py
+│   │   │   └── ic_burgers.py
+│   │   └── boundary_conditions/  # Boundary conditions
+│   │       ├── bc_heat.py
+│   │       ├── bc_wave.py
+│   │       └── bc_burgers.py
+│   ├── training/        # Training implementations
+│   │   ├── trainer.py
+│   │   ├── shm_trainer.py
+│   │   ├── heat_trainer.py
+│   │   ├── wave_trainer.py
+│   │   └── burgers_trainer.py
+│   └── utils/          # Utility functions
+│       ├── __init__.py
+│       └── config_parser.py
+├── results/            # Training results
+│   ├── shm/           # SHM results
+│   │   ├── models/    # Trained models
+│   │   │   └── model.pth
+│   │   ├── plots/     # Generated plots
+│   │   │   ├── loss_curve.png
+│   │   │   ├── solution_comparison.png
+│   │   │   └── solution_slice.png
+│   │   └── metrics/   # Training metrics
+│   │       └── loss_history.npy
+│   ├── heat/          # Heat equation results
+│   ├── wave/          # Wave equation results
+│   └── burgers/       # Burgers' equation results
+├── configs/           # Configuration files
+│   └── equations/     # Equation configurations
+│       ├── shm_equation.yaml
+│       ├── heat_equation.yaml
+│       ├── wave_equation.yaml
+│       └── burgers_equation.yaml
+├── scripts/          # Utility scripts
+│   ├── hyperparameter_tuning/  # Hyperparameter optimization
+│   │   ├── tune_shm.py
+│   │   ├── tune_heat.py
+│   │   ├── tune_wave.py
+│   │   └── tune_burgers.py
+│   └── analyze_results.py
+├── tests/           # Test suite
+│   ├── __init__.py
+│   ├── test_models.py
+│   ├── test_equations.py
+│   ├── test_data.py
+│   └── test_training.py
+├── requirements.txt  # Python dependencies
+├── setup_project.sh  # Project setup script
+├── activate_ml_env.sh  # Environment activation (Linux/Mac)
+├── activate_ml_env.ps1  # Environment activation (Windows)
+└── README.md        # Project documentation
 ```
 
 ## Data Organization
