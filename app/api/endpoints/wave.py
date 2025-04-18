@@ -20,7 +20,7 @@ import time
 router = APIRouter()
 
 # Load default configuration
-CONFIG_PATH = "configs/equations/wave.yaml"
+CONFIG_PATH = "configs/equations/wave_equation.yaml"
 default_config = load_config(CONFIG_PATH)
 
 class TrainRequest(BaseModel):

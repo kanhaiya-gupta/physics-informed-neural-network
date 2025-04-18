@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import torch
-import os
+from src.training.shm_trainer import SHMTrainer
 from src.models.shm_pinn import SHMPINN
 from src.equations.shm_equation import SHMEquation
+from src.utils.config_parser import load_config
+import os
+import torch
 
 router = APIRouter()
 
@@ -22,7 +24,6 @@ class SHMPredictResponse(BaseModel):
 async def train_shm(request: SHMTrainRequest):
     """Train the SHM PINN model."""
     try:
-        from src.training.shm_trainer import SHMTrainer
         trainer = SHMTrainer(omega=request.omega)
         final_loss = trainer.train(epochs=request.epochs, lr=request.learning_rate)
         return {"message": "Training completed successfully"}
@@ -57,4 +58,8 @@ async def predict_shm(request: SHMPredictRequest):
             
         return SHMPredictResponse(prediction=prediction_list)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Load default configuration
+CONFIG_PATH = "configs/equations/shm_equation.yaml"
+default_config = load_config(CONFIG_PATH) 

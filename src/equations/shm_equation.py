@@ -61,4 +61,56 @@ class SHMEquation(BaseEquation):
         Returns:
             torch.Tensor: Exact solution
         """
-        return torch.cos(self.omega * t) 
+        return torch.cos(self.omega * t)
+
+    def compute_pde_loss(self, t, u):
+        """
+        Compute the PDE loss for Simple Harmonic Motion.
+        
+        Args:
+            t (torch.Tensor): Time points
+            u (torch.Tensor): Predicted solution
+            
+        Returns:
+            torch.Tensor: PDE loss
+        """
+        # Ensure t requires gradients
+        t = t.clone().detach().requires_grad_(True)
+        
+        # Compute derivatives with allow_unused=True
+        u_t = torch.autograd.grad(u.sum(), t, create_graph=True, allow_unused=True)[0]
+        if u_t is None:
+            u_t = torch.zeros_like(t)
+            
+        u_tt = torch.autograd.grad(u_t.sum(), t, create_graph=True, allow_unused=True)[0]
+        if u_tt is None:
+            u_tt = torch.zeros_like(t)
+        
+        # PDE residual: d^2x/dt^2 + ω^2x = 0
+        pde_residual = u_tt + (self.omega ** 2) * u
+        
+        return torch.mean(pde_residual ** 2)
+    
+    def compute_ic_loss(self, t, u):
+        """
+        Compute the initial condition loss.
+        
+        Args:
+            t (torch.Tensor): Time points
+            u (torch.Tensor): Predicted solution
+            
+        Returns:
+            torch.Tensor: Initial condition loss
+        """
+        # Initial conditions: x(0) = 1, dx/dt(0) = 0
+        t0_mask = torch.abs(t) < 1e-6
+        x0 = u[t0_mask]
+        
+        if len(x0) == 0:
+            return torch.tensor(0.0, device=t.device)
+        
+        u_t = torch.autograd.grad(u.sum(), t, create_graph=True)[0]
+        v0 = u_t[t0_mask]
+        
+        ic_loss = torch.mean((x0 - 1.0) ** 2) + torch.mean(v0 ** 2)
+        return ic_loss 

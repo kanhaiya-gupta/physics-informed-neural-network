@@ -4,16 +4,28 @@
 model:
   layers: [1, 20, 20, 20, 1]  # Input size: 1 (time), Output size: 1 (displacement)
   activation: "tanh"
+  weight_initialization: "xavier"
+  dropout: 0.0
 
 # Training parameters
 training:
   epochs: 1000
   learning_rate: 0.001
   batch_size: 32
+  optimizer: "adam"
+  scheduler: "cosine"
+  early_stopping:
+    patience: 100
+    min_delta: 1e-6
+  loss_weights:
+    pde: 1.0
+    initial: 1.0
 
 # Equation parameters
 equation:
   omega: 1.0  # Angular frequency
+  t_min: 0.0  # Minimum time
+  t_max: 2*pi  # Maximum time
 
 # Domain parameters
 domain:
@@ -24,4 +36,19 @@ domain:
 # Initial conditions
 initial_conditions:
   x0: 1.0     # Initial displacement
-  v0: 0.0     # Initial velocity 
+  v0: 0.0     # Initial velocity
+
+data:
+  n_test: 100
+  noise_level: 0.0
+  seed: 42
+  validation_split: 0.2
+
+results:
+  save_frequency: 100
+  plot_frequency: 100
+  metrics:
+    - "loss"
+    - "mse"
+    - "mae"
+    - "relative_l2" 

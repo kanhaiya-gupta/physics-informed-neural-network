@@ -58,7 +58,12 @@ def setup_logger(name, log_dir="logs", log_file=None):
 
 # Create loggers for different components
 api_logger = setup_logger('api', log_file='api.log')
-training_logger = setup_logger('training', log_file='training.log')
+
+# Create separate loggers for each equation type
+shm_logger = setup_logger('shm', log_file='shm_training.log')
+heat_logger = setup_logger('heat', log_file='heat_training.log')
+wave_logger = setup_logger('wave', log_file='wave_training.log')
+burgers_logger = setup_logger('burgers', log_file='burgers_training.log')
 
 def log_api_request(endpoint: str, request_data: dict):
     """Log API request details."""
@@ -72,20 +77,33 @@ def log_api_error(endpoint: str, error: Exception, status_code: int):
     """Log API errors."""
     api_logger.error(f"Error in {endpoint} - Status: {status_code} - Error: {str(error)}")
 
+def get_equation_logger(equation_type: str) -> logging.Logger:
+    """Get the appropriate logger for the given equation type."""
+    loggers = {
+        'shm': shm_logger,
+        'heat': heat_logger,
+        'wave': wave_logger,
+        'burgers': burgers_logger
+    }
+    return loggers.get(equation_type.lower(), logging.getLogger(equation_type))
+
 def log_training_progress(model_type: str, epoch: int, loss: float, additional_metrics: dict = None):
     """Log training progress."""
-    msg = f"{model_type} - Epoch {epoch} - Loss: {loss:.6f}"
+    logger = get_equation_logger(model_type)
+    msg = f"Epoch {epoch} - Loss: {loss:.6f}"
     if additional_metrics:
         msg += f" - Metrics: {additional_metrics}"
-    training_logger.info(msg)
+    logger.info(msg)
 
 def log_training_start(model_type: str, config: dict):
     """Log start of training with configuration."""
-    training_logger.info(f"Starting {model_type} training with config: {config}")
+    logger = get_equation_logger(model_type)
+    logger.info(f"Starting training with config: {config}")
 
 def log_training_complete(model_type: str, final_loss: float, training_time: float):
     """Log training completion with metrics."""
-    training_logger.info(
-        f"{model_type} training completed - Final Loss: {final_loss:.6f} - "
+    logger = get_equation_logger(model_type)
+    logger.info(
+        f"Training completed - Final Loss: {final_loss:.6f} - "
         f"Training Time: {training_time:.2f}s"
     )

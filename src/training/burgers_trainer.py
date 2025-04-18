@@ -25,6 +25,10 @@ class BurgersTrainer(BaseTrainer):
         data_generator = BurgersDataGenerator()
         super().__init__(model, equation, data_generator, lr=lr)
 
+        # Set device
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
+
         # Create necessary directories
         self.results_dir = "results/burgers"
         self.models_dir = os.path.join(self.results_dir, "models")
@@ -85,7 +89,14 @@ class BurgersTrainer(BaseTrainer):
         
         for epoch in range(epochs):
             optimizer.zero_grad()
-            loss = self.model.compute_loss()
+            
+            # Generate collocation points
+            x, t = self.data_generator.generate_collocation_points()
+            x = x.to(self.device)
+            t = t.to(self.device)
+            
+            # Compute loss
+            loss = self.compute_loss(x, t)
             loss.backward()
             optimizer.step()
             self.loss_history.append(loss.item())

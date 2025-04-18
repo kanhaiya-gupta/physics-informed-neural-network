@@ -48,3 +48,25 @@ class BaseEquation:
                                 create_graph=True)[0]
         
         return u_x, u_xx, u_t
+
+    def compute_pde_loss(self, points, u):
+        """
+        Compute the PDE loss
+        Args:
+            points: input points (x, t)
+            u: predicted solution
+        Returns:
+            loss: PDE loss
+        """
+        # Split points into x and t
+        x = points[:, 0:1]
+        t = points[:, 1:2]
+        
+        # Compute derivatives
+        u_x, u_xx, u_t = self.compute_derivatives(x, t, u)
+        
+        # Compute residual
+        residual = self.pde_residual(x, t, u, u_x, u_xx, u_t)
+        
+        # Return mean squared residual
+        return torch.mean(residual ** 2)

@@ -19,7 +19,7 @@ import time
 router = APIRouter()
 
 # Load default configuration
-CONFIG_PATH = "configs/equations/heat.yaml"
+CONFIG_PATH = "configs/equations/heat_equation.yaml"
 default_config = load_config(CONFIG_PATH)
 
 class TrainRequest(BaseModel):
@@ -66,15 +66,14 @@ async def train_heat(request: TrainRequest):
             log_training_progress("Heat", epoch, loss)
         trainer.log_progress = log_progress
         
-        final_loss = trainer.train(epochs=request.epochs, lr=request.learning_rate)
-        training_time = time.time() - start_time
+        final_loss, training_time = trainer.train(epochs=request.epochs, lr=request.learning_rate)
         
         # Log training completion
         log_training_complete("Heat", final_loss, training_time)
         
         response = TrainResponse(
             message="Training completed successfully",
-            final_loss=float(final_loss),
+            final_loss=final_loss,
             training_time=training_time,
             epochs=request.epochs,
             config_used=config

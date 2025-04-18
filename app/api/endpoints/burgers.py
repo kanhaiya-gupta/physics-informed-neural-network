@@ -20,13 +20,13 @@ import time
 router = APIRouter()
 
 # Load default configuration
-CONFIG_PATH = "configs/equations/burgers.yaml"
+CONFIG_PATH = "configs/equations/burgers_equation.yaml"
 default_config = load_config(CONFIG_PATH)
 
 class TrainRequest(BaseModel):
     epochs: int = default_config.get("training", {}).get("epochs", 1000)
     learning_rate: float = default_config.get("training", {}).get("learning_rate", 0.001)
-    nu: float = default_config.get("physics", {}).get("nu", 0.01)
+    nu: float = default_config.get("equation", {}).get("nu", 0.01)
 
 class TrainResponse(BaseModel):
     message: str
@@ -46,7 +46,7 @@ async def train_burgers(request: TrainRequest):
         config = load_config(CONFIG_PATH)
         config["training"]["epochs"] = request.epochs
         config["training"]["learning_rate"] = request.learning_rate
-        config["physics"]["nu"] = request.nu
+        config["equation"]["nu"] = request.nu
         
         # Log training start
         log_training_start("Burgers", config)

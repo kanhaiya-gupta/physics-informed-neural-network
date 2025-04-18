@@ -1,9 +1,10 @@
 from fastapi import APIRouter
-from .endpoints import shm, heat, wave, burgers
+from app.api.endpoints import shm, heat, wave, burgers, batch
 
-router = APIRouter()
+api_router = APIRouter()
 
-router.include_router(shm.router, prefix="/shm", tags=["Simple Harmonic Motion"])
-router.include_router(heat.router, prefix="/heat", tags=["Heat Equation"])
-router.include_router(wave.router, prefix="/wave", tags=["Wave Equation"])
-router.include_router(burgers.router, prefix="/burgers", tags=["Burgers' Equation"])
+api_router.include_router(shm.router, prefix="/shm", tags=["Simple Harmonic Motion"])
+api_router.include_router(heat.router, prefix="/heat", tags=["Heat Equation"])
+api_router.include_router(wave.router, prefix="/wave", tags=["Wave Equation"])
+api_router.include_router(burgers.router, prefix="/burgers", tags=["Burgers' Equation"])
+api_router.include_router(batch.router, prefix="/batch", tags=["Batch Operations"])

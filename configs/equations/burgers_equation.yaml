@@ -1,5 +1,23 @@
 equation:
-  nu: 0.01  # Viscosity coefficient
-  x_range: [-1, 1]  # Spatial domain
-  t_range: [0, 1]   # Temporal domain
+  nu: 0.01    # Viscosity coefficient
+  x_min: -1.0  # Minimum spatial coordinate
+  x_max: 1.0   # Maximum spatial coordinate
+  t_min: 0.0   # Minimum time
+  t_max: 1.0   # Maximum time
   ic_type: "sin"    # Initial condition type (sinusoidal)
+
+model:
+  hidden_layers: [20, 20, 20]  # Number of neurons in each hidden layer
+  activation: "tanh"           # Activation function
+
+training:
+  epochs: 1000                # Number of training epochs
+  learning_rate: 0.001        # Learning rate
+  batch_size: 32              # Batch size for training
+  n_collocation: 1000         # Number of collocation points
+  n_boundary: 100            # Number of boundary points
+  n_initial: 100             # Number of initial condition points
+
+data:
+  n_test: 100                # Number of test points
+  noise_level: 0.0           # Noise level in training data

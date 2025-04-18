@@ -1,2 +1,46 @@
 equation:
   alpha: 1.0  # Thermal diffusivity
+  x_min: 0.0  # Minimum spatial coordinate
+  x_max: 1.0  # Maximum spatial coordinate
+  t_min: 0.0  # Minimum time
+  t_max: 1.0  # Maximum time
+  ic_type: "sin"  # Initial condition type (sinusoidal)
+  bc_type: "dirichlet"  # Boundary condition type
+
+model:
+  hidden_layers: [20, 20, 20]  # Number of neurons in each hidden layer
+  activation: "tanh"           # Activation function
+  weight_initialization: "xavier"  # Weight initialization method
+  dropout: 0.0                # Dropout rate (0.0 for no dropout)
+
+training:
+  epochs: 1000                # Number of training epochs
+  learning_rate: 0.001        # Learning rate
+  batch_size: 32              # Batch size for training
+  n_collocation: 1000         # Number of collocation points
+  n_boundary: 100            # Number of boundary points
+  n_initial: 100             # Number of initial condition points
+  optimizer: "adam"           # Optimizer type
+  scheduler: "cosine"         # Learning rate scheduler
+  early_stopping:            # Early stopping configuration
+    patience: 100            # Number of epochs to wait before stopping
+    min_delta: 1e-6          # Minimum change in loss to qualify as improvement
+  loss_weights:              # Weights for different loss terms
+    pde: 1.0                 # Weight for PDE loss
+    initial: 1.0             # Weight for initial condition loss
+    boundary: 1.0            # Weight for boundary condition loss
+
+data:
+  n_test: 100                # Number of test points
+  noise_level: 0.0           # Noise level in training data
+  seed: 42                   # Random seed for reproducibility
+  validation_split: 0.2      # Fraction of data to use for validation
+
+results:
+  save_frequency: 100        # Save model every N epochs
+  plot_frequency: 100        # Generate plots every N epochs
+  metrics:                   # Metrics to track
+    - "loss"
+    - "mse"
+    - "mae"
+    - "relative_l2"

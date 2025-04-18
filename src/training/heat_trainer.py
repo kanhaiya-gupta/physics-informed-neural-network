@@ -7,13 +7,17 @@ from src.equations.heat_equation import HeatEquation
 from src.data.generators.heat_data import HeatDataGenerator
 from src.data.initial_conditions.ic_heat import heat_initial_condition
 from src.data.boundary_conditions.bc_heat import heat_boundary_condition
+import time
 
 class HeatTrainer:
     def __init__(self):
+        """Initialize the Heat equation trainer."""
         self.model = HeatPINN()
         self.equation = HeatEquation()
         self.data_generator = HeatDataGenerator()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
+        self.optimizer = None  # Will be initialized in train method
         self.loss_history = []
         self.log_progress = None  # Custom logging function
         
@@ -26,40 +30,49 @@ class HeatTrainer:
         for dir_path in [self.results_dir, self.models_dir, self.plots_dir, self.metrics_dir]:
             os.makedirs(dir_path, exist_ok=True)
 
-    def train(self, epochs=1000, lr=0.001):
-        self.loss_history = []
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+    def train(self, epochs=1000, lr=0.001, batch_size=32):
+        """Train the model."""
+        start_time = time.time()
+        
+        # Initialize optimizer with the provided learning rate
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+        
+        # Generate training data and ensure it requires gradients
+        x = torch.linspace(0, 1, batch_size, requires_grad=True).reshape(-1, 1).to(self.device)
+        t = torch.linspace(0, 1, batch_size, requires_grad=True).reshape(-1, 1).to(self.device)
         
         for epoch in range(epochs):
-            optimizer.zero_grad()
-            x, t = self.data_generator.generate_collocation_points()
-            u = self.model.predict(x, t)
+            self.optimizer.zero_grad()
             
-            # Calculate gradients
-            u_x = torch.autograd.grad(u.sum(), x, create_graph=True)[0]
-            u_xx = torch.autograd.grad(u_x.sum(), x, create_graph=True)[0]
-            u_t = torch.autograd.grad(u.sum(), t, create_graph=True)[0]
+            # Forward pass
+            points = torch.cat([x, t], dim=1)
+            u_pred = self.model(points)
             
-            pde_loss = self.equation.pde_residual(x, t, u, u_x, u_xx, u_t).pow(2).mean()
-            # Placeholder: Add initial and boundary condition losses
-            loss = pde_loss
+            # Calculate losses
+            pde_loss = self.equation.compute_pde_loss(points, u_pred)
+            bc_loss = self.equation.compute_bc_loss(points, u_pred)
+            ic_loss = self.equation.compute_ic_loss(points, u_pred)
+            
+            # Total loss
+            loss = pde_loss + bc_loss + ic_loss
+            
+            # Backward pass and optimization
             loss.backward()
-            optimizer.step()
-            self.loss_history.append(loss.item())
+            self.optimizer.step()
             
             # Log progress
-            if self.log_progress:
-                self.log_progress(epoch, float(loss))
-            else:
-                print(f"Epoch {epoch}, Loss: {loss.item()}")
-            
-            # Save model periodically
-            if (epoch + 1) % 100 == 0:
-                self.save_model()
+            if epoch % 100 == 0:
+                print(f"Epoch {epoch}: Loss = {loss.item():.6f}")
+                self.loss_history.append(loss.item())
         
-        # Save final model
+        # Save the trained model
         self.save_model()
-        return float(loss)
+        
+        training_time = time.time() - start_time
+        final_loss = float(loss.item())
+        training_time = float(training_time)
+        
+        return final_loss, training_time
 
     def save_model(self):
         # Ensure directory exists

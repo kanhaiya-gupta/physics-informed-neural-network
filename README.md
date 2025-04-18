@@ -218,55 +218,70 @@ physics_informed_neural_network/
 ```
 
 ## Results Directory Structure
-The results directory (`results/`) contains subdirectories for each equation type (shm, heat, wave, burgers). Each equation directory has the following structure:
+
+The framework generates and stores results in a structured format under the `results` directory. Each equation has its own subdirectory with the following structure:
+
 ```
-results/<equation>/
-├── models/
-│   └── model.pth           # Trained model weights
-├── plots/
-│   ├── loss_curve.png      # Training loss curve
-│   ├── solution_comparison.png  # Comparison of predicted and exact solutions
-│   └── solution_slice.png  # Solution slice at a fixed time
-└── metrics/
-    └── loss_history.npy    # Training loss history
+results/
+├── burgers/
+│   ├── models/
+│   │   └── model.pth           # Trained model weights
+│   ├── plots/
+│   │   ├── loss_curve.png      # Training loss history
+│   │   ├── solution_comparison.png  # Comparison of predicted vs exact solution
+│   │   └── solution_slice.png  # Solution at a fixed time point
+│   └── metrics/
+│       └── loss_history.npy    # Raw loss values during training
 ```
+
+The same structure is maintained for other equations (heat, wave, SHM) under their respective directories.
 
 ## API Usage
-The FastAPI server provides endpoints for training and prediction for each equation type. The API documentation is available at `http://localhost:8000/docs` when the server is running.
 
-![FastAPI Swagger UI](docs/fastapi_swagger.jpeg)
+### Burgers' Equation
 
-The Swagger UI provides an interactive interface to:
-1. View all available endpoints
-2. Test the API directly from the browser
-3. See request/response schemas
-4. View example requests
+#### Train a Model
+```bash
+curl -X POST "http://localhost:8000/api/v1/burgers/train" \
+     -H "Content-Type: application/json" \
+     -d '{"epochs": 1000, "learning_rate": 0.001, "nu": 0.01}'
+```
 
-### Training Endpoints
-- `POST /shm/train`
-- `POST /heat/train`
-- `POST /wave/train`
-- `POST /burgers/train`
-
-Each training endpoint accepts a JSON body with:
+Response:
 ```json
 {
+    "message": "Training completed successfully",
+    "final_loss": 0.000002,
+    "training_time": 120.5,
     "epochs": 1000,
-    "learning_rate": 0.001
+    "config_used": {
+        "equation": {
+            "nu": 0.01,
+            "x_min": -1.0,
+            "x_max": 1.0,
+            "t_min": 0.0,
+            "t_max": 1.0
+        },
+        "training": {
+            "epochs": 1000,
+            "learning_rate": 0.001,
+            "batch_size": 32
+        }
+    }
 }
 ```
 
-### Prediction Endpoints
-- `POST /shm/predict`
-- `POST /heat/predict`
-- `POST /wave/predict`
-- `POST /burgers/predict`
+#### Make Predictions
+```bash
+curl -X POST "http://localhost:8000/api/v1/burgers/predict" \
+     -H "Content-Type: application/json" \
+     -d '{"x": [-1.0, 0.0, 1.0], "t": [0.0, 0.1, 0.2]}'
+```
 
-Each prediction endpoint accepts a JSON body with:
+Response:
 ```json
 {
-    "x": [0.1, 0.2, 0.3],  // Spatial coordinates (not used for SHM)
-    "t": [0.1, 0.2, 0.3]   // Temporal coordinates
+    "prediction": [0.0, 0.25, 0.5]
 }
 ```
 
