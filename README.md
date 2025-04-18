@@ -331,7 +331,10 @@ Temporal evolution of solutions at specific points:
    ```bash
    python main.py
    ```
-5. Access the API documentation at `http://localhost:8000/docs`
+5. Access the API documentation at `http://localhost:8000/docs` when the server is running.
+   
+ ![FastAPI Swagger UI](docs/fastapi_swagger.jpeg)
+ 
 
 ## Local Testing of GitHub Actions
 You can test the GitHub Actions workflows locally using `act`. This helps catch issues before pushing to the repository.
